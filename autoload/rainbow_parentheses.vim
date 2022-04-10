@@ -22,7 +22,7 @@ function! s:uniq(list)
 endfunction
 
 function! s:show_colors()
-  for level in reverse(range(1, s:max_level))
+  for level in reverse(range(1, 6))
     execute 'hi rainbowParensShell'.level
   endfor
 endfunction
@@ -35,10 +35,9 @@ function! rainbow_parentheses#activate(...)
   endif
 
   let s:generation += 1
-  let s:max_level = get(g:, 'rainbow#max_level', 8)
 
   " assume that colors are there
-  call s:regions(s:max_level)
+  call s:regions(36)
 
   command! -bang -nargs=? -bar RainbowParenthesesColors call s:show_colors()
   augroup rainbow_parentheses
@@ -50,7 +49,7 @@ endfunction
 
 function! rainbow_parentheses#deactivate()
   if exists('#rainbow_parentheses')
-    for level in range(1, s:max_level)
+    for level in range(1, 6)
       " FIXME How to cope with changes in rainbow#max_level?
       silent! execute 'hi clear rainbowParensShell'.level
       " FIXME buffer-local
@@ -76,7 +75,7 @@ function! s:regions(max)
   let pairs = get(g:, 'rainbow#pairs', [['(',')'], ['[', ']'], ['{', '}']])
   for level in range(1, a:max)
     let cmd = 'syntax region rainbowParens%d matchgroup=rainbowParensShell%d start=/%s/ end=/%s/ contains=%s'
-    let children = extend(['TOP'], map(range(level, a:max), '"rainbowParens".v:val'))
+    let children = extend(['TOP'], map(map(range(level, a:max), {v -> v % 7}), '"rainbowParens".v:val'))
     for pair in pairs
       let [open, close] = map(copy(pair), 'escape(v:val, "[]/")')
       execute printf(cmd, level, level, open, close, join(children, ','))
